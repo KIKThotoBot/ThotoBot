@@ -67,6 +67,15 @@ from kik.messages import messages_from_json, TextMessage, PictureMessage, \
 
 observationPeriod = 30
 # days tom keep data
+botUsername='thotobot'
+# User name of your bot
+botAPIKey=''
+# API Key of your bot
+botWebhook=''
+
+######################################################################################################################
+# do not change anything after this line 
+######################################################################################################################
 
 def addChatlogEntry(userid, groupid, messagetype, logdate):
     chatlogentry = (userid, groupid, messagetype, logdate)
@@ -81,7 +90,7 @@ def getSingeleUserLogCounts(userid, groupid):
     dbConnection = sqlite3.connect('thotobot.db')
     dbCursor = dbConnection.cursor()
     dbCursor.execute('SELECT count(*) FROM chatlog, users WHERE chatlog.userid = users.id AND users.id = ? AND chatlog.groupid = ? group by chatlog.userid', conditionValues)
-    useraction = dbCursor.fetchone()
+     useraction = dbCursor.fetchone()
     dbConnection.commit()
     dbConnection.close()
     return useraction[0]
@@ -222,6 +231,9 @@ class KikBot(Flask):
             # Check if its the user's first message. Start Chatting messages are sent only once.
             if isinstance(message, StartChattingMessage):
                 # check if User exist in DB
+                if not (findUserIDbyKIKUserID(user)>0):
+                    addUser(message.from_user, message.id)
+                
                 # if not add
                 # chat_id how to check if this is a Group chat?
                 response_messages.append(TextMessage(
@@ -323,10 +335,10 @@ class KikBot(Flask):
 
 if __name__ == "__main__":
     """ Main program """
-    kik = KikApi('BOT_USERNAME_HERE', 'BOT_API_KEY_HERE')
+    kik = KikApi(botUsername, botAPIKey)
     # For simplicity, we're going to set_configuration on startup. However, this really only needs to happen once
     # or if the configuration changes. In a production setting, you would only issue this call if you need to change
     # the configuration, and not every time the bot starts.
-    kik.set_configuration(Configuration(webhook='WEBHOOK_HERE'))
+    kik.set_configuration(Configuration(webhook=botWebhook))
     app = KikBot(kik, __name__)
 app.run(port=8080, host='127.0.0.1', debug=True)
